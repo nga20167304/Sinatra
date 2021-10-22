@@ -4,7 +4,7 @@
   <% if @memos %>
     <% @memos.each do |memo| %>
       <li data-id= "<%= h memo['id'] %>">
-        <a href = "/memos/<%= hattr memo['id'] %>"><%= h memo['body'] %></a>
+        <a href = "/memos/<%= h memo['id'] %>"><%= h memo['body'] %></a>
       </li>
     <% end %>
   <% end %>
