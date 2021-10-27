@@ -1,7 +1,7 @@
-<form method="post" action="/memos/<%= h @memo[0]['id'] %>">
-	<input type="text" name="title" class="memo-title border" value="<%= h @memo[0]['title'] %>">
+<form method="post" action="/memos/<%= h params[:id] %>">
+	<input type="text" name="title" class="memo-title border" value="<%= h @memo['title'] %>">
 
-	<textarea name="body" class="memo-body border"><%= h @memo[0]['body'] %></textarea>
+	<textarea name="body" class="memo-body border"><%= h @memo['body'] %></textarea>
 
   <input type="hidden" name="_method" value="PATCH">
 	<input type="submit" value="変更" class="button edit">
