@@ -1,0 +1,12 @@
+<div class = "field"><%= h @memo['title'] %></div>
+<div class = "field"><%= h @memo['body'] %></div>
+<br>
+
+<div class="button">
+  <a href = "/memos/<%= h params[:id] %>/edit"><button>変更</button></a>
+</div>
+
+<form class="button" method="post" action="/memos/<%= params[:id] %>">
+  <input type="hidden" name="_method" value="DELETE">
+  <input type="submit" value="削除">
+</form>

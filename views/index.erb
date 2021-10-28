@@ -1,0 +1,11 @@
+<a href = "/memos/new" ><button>追加</button></a>
+
+<ul>
+  <% if @memos %>
+    <% @memos.each do |key, value| %>
+      <li data-id= "<%= h key %>">
+        <a href = "/memos/<%= h key %>"><%= h value['title'] %></a>
+      </li>
+    <% end %>
+  <% end %>
+</ul>
