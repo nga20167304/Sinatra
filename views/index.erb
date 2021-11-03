@@ -2,9 +2,9 @@
 
 <ul>
   <% if @memos %>
-    <% @memos.each do |key, value| %>
-      <li data-id= "<%= h key %>">
-        <a href = "/memos/<%= h key %>"><%= h value['title'] %></a>
+    <% @memos.each do |memo| %>
+      <li data-id= "<%= h memo[:id] %>">
+        <a href = "/memos/<%= h memo[:id] %>"><%= h memo[:title] %></a>
       </li>
     <% end %>
   <% end %>
