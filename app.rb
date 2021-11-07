@@ -92,7 +92,7 @@ patch '/memos/:id' do
 
   begin
     conection = PG.connect :dbname => 'sinatra_development', :user => 'postgres', :password => ''
-    conection.exec "UPDATE memos SET title = #{params[:title]}, body = #{params[:body]} WHERE memos.id = #{params[:id]} ;"
+    conection.exec "UPDATE memos SET title = '#{params[:title]}', body = '#{params[:body]}' WHERE memos.id = #{params[:id]} ;"
   rescue PG::Error => e
     val_error = e.message 
   ensure
