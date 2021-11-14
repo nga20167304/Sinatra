@@ -8,23 +8,15 @@ require 'pg'
 
 # connect to postgresql
 memos = []
-begin
-  conection = PG.connect dbname: 'sinatra_development', user: 'postgres', password: ''
-
-  t_memos = conection.exec 'SELECT * FROM memos'
-
-  t_memos.each do |s_memo|
-    memos.push({ id: s_memo['id'], title: s_memo['title'], body: s_memo['body'] })
-  end
-rescue PG::Error => e
-  val_error = e.message
-ensure
-  conection&.close
-end
+connection = PG.connect dbname: 'sinatra_development', user: 'postgres', password: ''
 
 get '/' do
   @title = 'main'
-  @memos = memos
+  table_memos = connection.exec 'SELECT * FROM memos'
+  table_memos.each do |memo|
+    memos.push({ id: memo['id'], title: memo['title'], body: memo['body'] })
+  end
+  @memos = memos.uniq
   erb :index
 end
 
@@ -37,7 +29,8 @@ end
 # show memo contents
 get '/memos/:id' do
   @title = 'メモを表示'
-  @memo = memos.find { |s| s[:id] == params[:id] }
+  result = connection.exec "SELECT id, title, body FROM memos WHERE id = #{params[:id]};"
+  @memo = result.first
   erb :show
 end
 
@@ -49,14 +42,7 @@ post '/memos' do
   key_arr = memos.map { |i| i[:id] }
   last_id = key_arr.max.to_i + 1
 
-  begin
-    conection = PG.connect dbname: 'sinatra_development', user: 'postgres', password: ''
-    conection.exec "INSERT INTO memos(id, title, body) VALUES (#{last_id}, '#{params[:title]}','#{params[:body]}') ;"
-  rescue PG::Error => e
-    val_error = e.message
-  ensure
-    conection&.close
-  end
+  connection.exec "INSERT INTO memos(id, title, body) VALUES (#{last_id}, '#{params[:title]}','#{params[:body]}') ;"
 
   redirect '/'
 end
@@ -64,39 +50,22 @@ end
 # deleting process
 delete '/memos/:id' do
   @title = 'メモを削除'
-
-  begin
-    conection = PG.connect dbname: 'sinatra_development', user: 'postgres', password: ''
-    conection.exec "DELETE FROM memos WHERE memos.id = #{params[:id]} ;"
-  rescue PG::Error => e
-    val_error = e.message
-  ensure
-    conection&.close
-  end
-
+  connection.exec "DELETE FROM memos WHERE memos.id = #{params[:id]} ;"
   redirect '/'
 end
 
 # to editer page.
 get '/memos/:id/edit' do
   @title = 'メモを修正'
-  @memo = memos.find { |s| s[:id] == params[:id] }
+  result = connection.exec "SELECT title, body FROM memos WHERE id = #{params[:id]};"
+  @memo = result.first
   erb :edit
 end
 
 # editing process
 patch '/memos/:id' do
   @title = 'メモを修正'
-
-  begin
-    conection = PG.connect dbname: 'sinatra_development', user: 'postgres', password: ''
-    conection.exec "UPDATE memos SET title = '#{params[:title]}', body = '#{params[:body]}' WHERE memos.id = #{params[:id]} ;"
-  rescue PG::Error => e
-    val_error = e.message
-  ensure
-    conection&.close
-  end
-
+  connection.exec "UPDATE memos SET title = '#{params[:title]}', body = '#{params[:body]}' WHERE memos.id = #{params[:id]} ;"
   redirect '/'
 end
 
