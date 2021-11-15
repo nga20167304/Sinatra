@@ -7,16 +7,13 @@ require 'byebug'
 require 'pg'
 
 # connect to postgresql
-memos = []
 connection = PG.connect dbname: 'sinatra_development', user: 'postgres', password: ''
+connection.exec "CREATE TABLE IF NOT EXISTS memos(id SERIAL PRIMARY KEY, title VARCHAR(20), body TEXT);"
 
 get '/' do
   @title = 'main'
-  table_memos = connection.exec 'SELECT * FROM memos'
-  table_memos.each do |memo|
-    memos.push({ id: memo['id'], title: memo['title'], body: memo['body'] })
-  end
-  @memos = memos.uniq
+  results = connection.exec 'SELECT * FROM memos ORDER BY memos.id ASC'
+  @memos = results.entries.map { |memo| memo.transform_keys(&:to_sym) }
   erb :index
 end
 
@@ -29,21 +26,18 @@ end
 # show memo contents
 get '/memos/:id' do
   @title = 'メモを表示'
-  result = connection.exec "SELECT id, title, body FROM memos WHERE id = #{params[:id]};"
-  @memo = result.first
+  sql = "SELECT * FROM memos WHERE id = $1;"
+  id = params[:id]
+  params = [id]
+  result = connection.exec_params(sql, params)
+  @memo = result.first.transform_keys(&:to_sym)
   erb :show
 end
 
 # creating process
 post '/memos' do
   @title = 'メモを追加'
-
-  # create id for new memo_data
-  key_arr = memos.map { |i| i[:id] }
-  last_id = key_arr.max.to_i + 1
-
-  connection.exec "INSERT INTO memos(id, title, body) VALUES (#{last_id}, '#{params[:title]}','#{params[:body]}') ;"
-
+  connection.exec "INSERT INTO memos(id, title, body) VALUES (DEFAULT, '#{params[:title]}', '#{params[:body]}');"
   redirect '/'
 end
 
