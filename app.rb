@@ -43,7 +43,7 @@ end
 # deleting process
 delete '/memos/:id' do
   @title = 'メモを削除'
-  sql = "DELETE FROM memos WHERE memos.id = $1 ;"
+  sql = "DELETE FROM memos WHERE memos.id = $1;"
   connection.exec_params(sql, [params[:id]])
   redirect '/'
 end
@@ -60,7 +60,7 @@ end
 # editing process
 patch '/memos/:id' do
   @title = 'メモを修正'
-  sql = "UPDATE memos SET title = $1, body = $2 WHERE memos.id = $3 ;"
+  sql = "UPDATE memos SET title = $1, body = $2 WHERE memos.id = $3;"
   connection.exec_params(sql, [params[:title], params[:body], params[:id]])
   redirect '/'
 end
