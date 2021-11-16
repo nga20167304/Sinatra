@@ -27,9 +27,7 @@ end
 get '/memos/:id' do
   @title = 'メモを表示'
   sql = "SELECT * FROM memos WHERE id = $1;"
-  id = params[:id]
-  params = [id]
-  result = connection.exec_params(sql, params)
+  result = connection.exec_params(sql, [params[:id]])
   @memo = result.first.transform_keys(&:to_sym)
   erb :show
 end
@@ -37,29 +35,33 @@ end
 # creating process
 post '/memos' do
   @title = 'メモを追加'
-  connection.exec "INSERT INTO memos(id, title, body) VALUES (DEFAULT, '#{params[:title]}', '#{params[:body]}');"
+  sql = "INSERT INTO memos(id, title, body) VALUES (DEFAULT, $1, $2);"
+  connection.exec_params(sql, [params[:title], params[:body]])
   redirect '/'
 end
 
 # deleting process
 delete '/memos/:id' do
   @title = 'メモを削除'
-  connection.exec "DELETE FROM memos WHERE memos.id = #{params[:id]} ;"
+  sql = "DELETE FROM memos WHERE memos.id = $1 ;"
+  connection.exec_params(sql, [params[:id]])
   redirect '/'
 end
 
 # to editer page.
 get '/memos/:id/edit' do
   @title = 'メモを修正'
-  result = connection.exec "SELECT title, body FROM memos WHERE id = #{params[:id]};"
-  @memo = result.first
+  sql = "SELECT * FROM memos WHERE id = $1;"
+  result = connection.exec_params(sql, [params[:id]])
+  @memo = result.first.transform_keys(&:to_sym)
   erb :edit
 end
 
 # editing process
 patch '/memos/:id' do
   @title = 'メモを修正'
-  connection.exec "UPDATE memos SET title = '#{params[:title]}', body = '#{params[:body]}' WHERE memos.id = #{params[:id]} ;"
+  sql = "UPDATE memos SET title = $1, body = $2 WHERE memos.id = $3 ;"
+  connection.exec_params(sql, [params[:title], params[:body], params[:id]])
   redirect '/'
 end
 
