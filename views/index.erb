@@ -1,10 +1,10 @@
-<a href = "/memos/new" ><button>追加</button></a>
+<a href="/memos/new" ><button>追加</button></a>
 
 <ul>
   <% if @memos %>
     <% @memos.each do |memo| %>
       <li data-id= "<%= memo[:id] %>">
-        <a href = "/memos/<%= memo[:id] %>"><%= h memo[:title] %></a>
+        <a href="/memos/<%= memo[:id] %>"><%= h memo[:title] %></a>
       </li>
     <% end %>
   <% end %>
