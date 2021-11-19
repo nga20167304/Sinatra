@@ -4,28 +4,16 @@ require 'sinatra'
 require 'sinatra/reloader'
 require 'json'
 require 'byebug'
+require 'pg'
 
-#
-# ------------ global variable -----------
-#
-
-json_file_path = 'storage/memo.json'
-json_data = File.open(json_file_path) do |io|
-  JSON.parse(io.read)
-end
-
-memos = json_data
-
-# rewrite the json_data
-def rewrite_json(my_hash)
-  File.open('storage/memo.json', 'w') do |file|
-    file.write(JSON.pretty_generate(my_hash))
-  end
-end
+# connect to postgresql
+connection = PG.connect dbname: 'sinatra_development', user: 'postgres', password: ''
+connection.exec "CREATE TABLE IF NOT EXISTS memos(id SERIAL PRIMARY KEY, title VARCHAR(20), body TEXT);"
 
 get '/' do
   @title = 'main'
-  @memos = memos
+  results = connection.exec 'SELECT * FROM memos ORDER BY memos.id ASC'
+  @memos = results.entries.map { |memo| memo.transform_keys(&:to_sym) }
   erb :index
 end
 
@@ -38,61 +26,43 @@ end
 # show memo contents
 get '/memos/:id' do
   @title = 'メモを表示'
-
-  @memo = memos[params[:id].to_s]
+  sql = "SELECT * FROM memos WHERE id = $1;"
+  result = connection.exec_params(sql, [params[:id]])
+  @memo = result.first.transform_keys(&:to_sym)
   erb :show
 end
 
 # creating process
 post '/memos' do
   @title = 'メモを追加'
-
-  # create id for new memo_data
-  key_arr = memos.keys
-  last_id = key_arr.max.to_i + 1
-
-  # create new json data with appended new memo
-  new_memo = { last_id.to_s => { 'title' => params[:title], 'body' => params[:body] } }
-
-  json_data = json_data.merge(new_memo)
-
-  rewrite_json(json_data)
-
+  sql = "INSERT INTO memos(id, title, body) VALUES (DEFAULT, $1, $2);"
+  connection.exec_params(sql, [params[:title], params[:body]])
   redirect '/'
-  erb :show
 end
 
 # deleting process
 delete '/memos/:id' do
   @title = 'メモを削除'
-
-  memos.delete(params[:id].to_s)
-
-  rewrite_json(json_data)
-
+  sql = "DELETE FROM memos WHERE memos.id = $1;"
+  connection.exec_params(sql, [params[:id]])
   redirect '/'
-  erb :index
 end
 
 # to editer page.
 get '/memos/:id/edit' do
   @title = 'メモを修正'
-  @memo = memos[params[:id].to_s]
+  sql = "SELECT * FROM memos WHERE id = $1;"
+  result = connection.exec_params(sql, [params[:id]])
+  @memo = result.first.transform_keys(&:to_sym)
   erb :edit
 end
 
 # editing process
 patch '/memos/:id' do
   @title = 'メモを修正'
-
-  edit_memo = memos[params[:id].to_s]
-  edit_memo['title'] = params[:title]
-  edit_memo['body'] = params[:body]
-
-  rewrite_json(json_data)
-
+  sql = "UPDATE memos SET title = $1, body = $2 WHERE memos.id = $3;"
+  connection.exec_params(sql, [params[:title], params[:body], params[:id]])
   redirect '/'
-  erb :index
 end
 
 helpers do
